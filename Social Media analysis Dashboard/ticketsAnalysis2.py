@@ -129,7 +129,7 @@ ticket_df['month'] = ticket_df['month'].apply(lambda x: calendar.month_abbr[x])
 filterspam = ticket_df.time_to_resolve==pd.Timedelta("0 days 0 hours")
 spam_df = ticket_df[filterspam]
 spam_df=spam_df.groupby(['month','year'], as_index=False).agg({"time_to_resolve": pd.Series.count})
-# print(spam_df)
+####### print(spam_df)
 #################################################################################
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
