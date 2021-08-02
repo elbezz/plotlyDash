@@ -1,0 +1,24 @@
+bar chart
+
+https://plotly.com/python-api-reference/index.html
+
+https://plotly.com/python/builtin-colorscales/
+
+https://plotly.com/python/animations/
+
+https://plotly.com/python-api-reference/generated/plotly.graph_objects.Layout.html#plotly.graph_objects.Layout
+
+https://plotly.com/python-api-reference/generated/plotly.graph_objects.Bar.html#plotly.graph_objects.Bar
+
+
+pie chart
+
+https://plotly.com/python/pie-charts/
+https://plotly.com/python-api-reference/generated/plotly.express.pie.html#plotly.express.pie
+https://plotly.com/python-api-reference/generated/plotly.graph_objects.Pie.html#plotly.graph_objects.Pie
+
+
+pie chart dropdown  
+
+https://dash.plotly.com/dash-core-components/dropdown
+https://plotly.com/python-api-reference/plotly.express.html
