@@ -14,7 +14,7 @@ from datetime import date
 import calendar
 from wordcloud import WordCloud
 #################################################################################
-# import dataframes
+# import dataframes from csv
 ticket_df = pd.read_csv(r'D:\data\tblticket.csv')
 ticketReply_df= pd.read_csv(r'D:\data\tblticketreplies.csv')
 tbladmins_df = pd.read_csv(r'D:\data\tbladmins.csv')
