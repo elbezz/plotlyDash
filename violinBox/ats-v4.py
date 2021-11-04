@@ -19,7 +19,6 @@ from scipy.sparse.linalg import lsqr as sparse_lsqr
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
-
 cir_conf_df = pd.read_csv(r'D:\ats\random_data\cirConf.csv')
 
 # cir_conf_time_df = cir_conf_df.copy()
