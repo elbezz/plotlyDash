@@ -18,10 +18,11 @@ from scipy.sparse.linalg import lsqr as sparse_lsqr
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
-cir_conf_df = pd.read_csv(r'D:\ats\random_data\cirConf.csv')
+from sklearn.preprocessing import PolynomialFeatures
+cir_conf_df = pd.read_csv(r'E:\ats\ats\random_data\cirConf.csv')
 
-nms_stat_df = pd.read_csv(r'D:\ats\random_data\nms_stat.csv')
-datasetTable = pd.read_csv(r'D:\ats\random_data\dataset-vs.csv')
+nms_stat_df = pd.read_csv(r'E:\ats\ats\random_data\nms_stat.csv')
+datasetTable = pd.read_csv(r'E:\ats\ats\random_data\dataset-vs.csv')
 
 dataset = pd.merge(nms_stat_df, cir_conf_df, how='left', on="date")
 dataset['CIR_Alloc'] = np.random.normal((np.sqrt(dataset['CIR_Conf'])*np.random.uniform(
@@ -191,7 +192,7 @@ app.layout = dbc.Container([
             dbc.Col([
                 dcc.Graph(
                     id='line-chart-cir-conf-percentil-prediction', figure={}),
-            ], width=9),
+            ], width=8),
             dbc.Col([
   
                     dbc.Card([
@@ -203,7 +204,7 @@ app.layout = dbc.Container([
                     dt.DataTable(
                         id='tblPred', data=prcl_df.to_dict('records'), columns=[{"name": i, "id": i}for i in prcl_df.columns],
                         style_table={'height': '600px'}, style_cell={'minWidth': 95, 'maxWidth': 95, 'width': 95},)
-                    ], width=3),
+                    ], width=4),
             ], className='mb-2 mt-2'),
     dbc.Row([
         dbc.Col([
@@ -259,12 +260,36 @@ def update_small_cards(option_slctd, option_slctd2):
 
     conf_alloc_perc_df = pd.merge(
         datasetCopy, dffLine, how='left', on="CIR_Conf")
+    new1=conf_alloc_perc_df.groupby(['date', 'CIR_Conf']).max('CIR_Alloc').reset_index()
+   
+    new2=conf_alloc_perc_df.copy()
     conf_alloc_perc_df.rename(
         columns={"CIR_Conf": "Sold", "date": "Time", "CIR_Alloc": "Requested", "percentile": "Required" + "(" + str(percentil)+"%)"}, inplace=True)
 
     conf_alloc_perc_df =conf_alloc_perc_df.loc[0:len(
         conf_alloc_perc_df):10000]
-    print(conf_alloc_perc_df)
+    # print(conf_alloc_perc_df)
+
+
+
+    new1["i"] = new1["date"] + new1["CIR_Conf"].astype(str)
+    new1.drop(['date','CIR_Conf','percentile'], axis=1,inplace=True)
+
+    
+    new2["i"] = new2["date"] + new2["CIR_Conf"].astype(str)
+    new2.drop(['CIR_Alloc'], axis=1,inplace=True)
+
+    plot_dff = pd.merge(new2, new1, how='left', on="i")
+    plot_dff.drop(['i'], axis=1,inplace=True)
+
+    plot_dff.rename(
+        columns={"CIR_Conf": "Sold", "date": "Time", "CIR_Alloc": "Requested", "percentile": "Required" + "(" + str(percentil)+"%)"}, inplace=True)
+    plot_dff =plot_dff.loc[0:len(
+        plot_dff):10000]
+    print('plotDF')
+    print(plot_dff)
+
+
     dffLine.rename(columns={"CIR_Conf": "CIR-Configured"}, inplace=True)
 # The linear regression
     linear_model_sqrt = LinearRegression(normalize=True)
@@ -281,7 +306,55 @@ def update_small_cards(option_slctd, option_slctd2):
     linear_model_square_inv.fit(X_square_train_transform_inv, y_inv)
     y_pred_train_square_inv = linear_model_square_inv.predict(
         X_square_train_transform_inv)
+# ///////////////////////////////////////////////////////////////////////
+#///////////////////////////////////////////////////////////////////////
+    linear_model_poly = LinearRegression(normalize=True)
+    poly_reg=PolynomialFeatures(degree=2)
+    X_poly=poly_reg.fit_transform(x_inv)
+    poly_reg.fit(X_poly,y_inv)
+    linear_model_poly.fit(X_poly,y_inv) 
+    y_pred_train_poly = linear_model_poly.predict(X_poly)
 
+    linear_model_poly_inv = LinearRegression(normalize=True)
+    # x_inv = dffLine[["percentile"]]
+    # y_inv = dffLine[["CIR-Configured"]]
+    X_poly_train_transform_inv = x_inv*x_inv
+    linear_model_poly_inv.fit(X_poly_train_transform_inv, y_inv)
+    y_pred_train_poly_inv = linear_model_square_inv.predict(
+        X_poly_train_transform_inv)
+    # print ("Square regression MSE Training : "+str(mean_squared_error(y_inv, y_pred_train_poly)))
+    # c = linear_model_poly.coef_[0][2]
+    # d = linear_model_poly.coef_[0][1]
+    # e = linear_model_poly.intercept_[0]
+    # print ("y = ax² + bx + c")
+    # print ("y = " + str(round(c,4)) + "x²" + " + " + str(round(d,4)) + "x" + " + " + str(round(e,4)))
+
+    y_pred_train_poly_df = pd.DataFrame(
+        y_pred_train_poly, columns=['y_pred_train_poly'])
+
+    y_pred_train_poly_inv_df = pd.DataFrame(
+        y_pred_train_poly_inv, columns=['y_pred_train_poly_inv'])
+
+    regression_poly_df = pd.merge(pd.merge(pd.merge(
+        x, y, left_index=True, right_index=True), y_pred_train_poly_df, left_index=True, right_index=True),y_pred_train_poly_inv_df, left_index=True, right_index=True)
+
+    regression_poly_df.rename(
+        columns={"y_pred_train_poly_inv": "CIR-Configuredd"}, inplace=True)
+    regression_poly_df['CIR-Configuredd'] = round(
+        regression_poly_df['CIR-Configuredd'], 2)
+
+    predictionTbl_poly_df = regression_poly_df[["CIR-Configuredd", "percentile"]].copy()
+    predictionTbl_poly_df.rename(
+        columns={"CIR-Configuredd": "Bandwidth Sold", "percentile": "Bandwidth Required"}, inplace=True)
+    print(predictionTbl_poly_df)
+    
+    CIR_Phy = [[option_slctd2]]
+    y_pred_CIR_Conf_Max = linear_model_poly_inv.predict(np.square(CIR_Phy))
+    y_pred_CIR_Conf_Max_round = round(int(y_pred_CIR_Conf_Max[0][0]), 2)
+
+
+
+    #///////////////////////////////////////////////////////////////////////////////////////////////////////
 # ------------------------------------------------------------------------------
 # join regression_df for the plot
     y_pred_train_sqrt_df = pd.DataFrame(
@@ -307,13 +380,13 @@ def update_small_cards(option_slctd, option_slctd2):
     predictionTbl_df.rename(
         columns={"CIR-Configuredd": "Bandwidth Sold", "percentile": "Bandwidth Required"}, inplace=True)
 
-    print(regression_df)
+    # print(regression_df)
 # ---------------------------------------------------------------------------------------
 # Prédiction CIR_Conf Max
-    CIR_Phy = [[option_slctd2]]
+    # CIR_Phy = [[option_slctd2]]
 # Prédire maintenant CIR_Conf quand percentile = CIR_Phy avec le modèle inversé qu'on vient de mettre en place
-    y_pred_CIR_Conf_Max = linear_model_square_inv.predict(np.square(CIR_Phy))
-    y_pred_CIR_Conf_Max_round = round(int(y_pred_CIR_Conf_Max[0][0]), 2)
+    # y_pred_CIR_Conf_Max = linear_model_square_inv.predict(np.square(CIR_Phy))
+    # y_pred_CIR_Conf_Max_round = round(int(y_pred_CIR_Conf_Max[0][0]), 2)
 
 # Pie chart's dataframe
     column_names = ["type", "value"]
@@ -369,18 +442,29 @@ def update_small_cards(option_slctd, option_slctd2):
     Overbooking_Ratio_array = y_pred_CIR_Conf_Max[0][0]/CIR_Phy
     Overbooking_Ratio = round(Overbooking_Ratio_array[0][0], 2)
 
-    a = linear_model_square_inv.coef_[0][0]
-    b = linear_model_square_inv.intercept_[0]
+    # a = linear_model_poly_inv.coef_[0][0]
+    # b = linear_model_poly_inv.intercept_[0]
+    c = linear_model_poly.coef_[0][2]
+    d = linear_model_poly.coef_[0][1]
+    e = linear_model_poly.intercept_[0]
 
-    equation = "y =" + str(round(a, 2)) + "x² +"+str(round(b, 2))
-
-   # ---------------------------------------------------------------------
+    equation = "y = " + str(round(c,4)) + "x²" + " + " + str(round(d,4)) + "x" + " + " + str(round(e,4))
+    # equation = "y =" + str(round(a, 2)) + "x² +"+str(round(b, 2))
+#//////////////////////////////////////////////////////////////////////////
     columns_names = ["Bandwidth Required", "Bandwidth Sold"]
-    phy_maxBW_df = pd.DataFrame(columns=columns_names)
-    phy_maxBW_df = phy_maxBW_df.append(
+    phy_maxBW_poly_df = pd.DataFrame(columns=columns_names)
+    phy_maxBW_poly_df = phy_maxBW_poly_df.append(
         {'Bandwidth Required': option_slctd2, 'Bandwidth Sold': y_pred_CIR_Conf_Max_round}, ignore_index=True)
-    concatframe = [predictionTbl_df.tail(1), phy_maxBW_df]
-    added_df = pd.concat(concatframe)
+    concatframe_poly = [predictionTbl_poly_df.tail(1), phy_maxBW_poly_df]
+    added_poly_df = pd.concat(concatframe_poly)
+#/////////////////////////////////////////////////////////////////////////
+   # ---------------------------------------------------------------------
+    # columns_names = ["Bandwidth Required", "Bandwidth Sold"]
+    # phy_maxBW_df = pd.DataFrame(columns=columns_names)
+    # phy_maxBW_df = phy_maxBW_df.append(
+    #     {'Bandwidth Required': option_slctd2, 'Bandwidth Sold': y_pred_CIR_Conf_Max_round}, ignore_index=True)
+    # concatframe = [predictionTbl_df.tail(1), phy_maxBW_df]
+    # added_df = pd.concat(concatframe)
 
     # adjusting the area plot for forcast graph
  
@@ -403,8 +487,8 @@ def update_small_cards(option_slctd, option_slctd2):
     trace2 = px.line(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured", template='presentation', width=1490, height=600, labels={"CIR-Configured": "Bandwidth Sold", "percentile": "Bandwidth Required" + str(percentil)}).update_traces(
         mode='markers+lines').add_trace(px.area(data_frame=dffLine, x="CIR-Configured", y="percentile").data[0]).add_trace(px.scatter(dffLine, x=dffLine["CIR-Configured"], y=dffLine["percentile"], text=dffLine["diff"]).data[0]).add_trace(px.line(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured").data[0]).update_layout(yaxis=dict(tickfont=dict(size=12)), xaxis=dict(tickfont=dict(size=12)), font=dict(family="Courier New, monospace", size=10, color="black")).add_trace(px.scatter(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured", text="CIR-Configured").data[0]).update_traces(textposition="top right", hovertemplate=None, hoverinfo='skip').add_trace(px.scatter(data_frame=dffLine, x="CIR-Configured", y="percentile", labels={"CIR-Configured": "Bandwidth Sold", "percentile": "Bandwidth Required"}).data[0])
 
-    trace3 = px.line(data_frame=predictionTbl_df, x="Bandwidth Required", y="Bandwidth Sold", labels={"Bandwidth Required": "Bandwidth Required" + "(" + str(percentil)+"%)"}, template='presentation', width=1200, height=600).update_traces(mode='markers+lines').add_trace(px.area(data_frame=added_df, x="Bandwidth Required", y="Bandwidth Sold").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852').add_trace(px.scatter(data_frame=added_df, x="Bandwidth Required", y="Bandwidth Sold", text="Bandwidth Sold").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852', textfont=dict(family="sans serif", size=18, color="blue")).add_trace(px.scatter(
-        data_frame=predictionTbl_df[:-1], x="Bandwidth Required", y="Bandwidth Sold", text="Bandwidth Sold").data[0]).update_traces(textposition="bottom right").update_layout(title='', title_x=0.5, showlegend=False,).update_layout(yaxis=dict(tickfont=dict(size=12)), xaxis=dict(tickfont=dict(size=12)), font=dict(family="Courier New, monospace", size=10, color="black"))
+    trace3 = px.line(data_frame=predictionTbl_poly_df, x="Bandwidth Required", y="Bandwidth Sold", labels={"Bandwidth Required": "Bandwidth Required" + "(" + str(percentil)+"%)"}, template='presentation', width=1000, height=600).update_traces(mode='markers+lines').add_trace(px.area(data_frame=added_poly_df, x="Bandwidth Required", y="Bandwidth Sold").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852').add_trace(px.scatter(data_frame=added_poly_df, x="Bandwidth Required", y="Bandwidth Sold", text="Bandwidth Sold").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852', textfont=dict(family="sans serif", size=18, color="blue")).add_trace(px.scatter(
+        data_frame=predictionTbl_poly_df[:-1], x="Bandwidth Required", y="Bandwidth Sold", text="Bandwidth Sold").data[0]).update_traces(textposition="bottom right").update_layout(title='', title_x=0.5, showlegend=False,).update_layout(yaxis=dict(tickfont=dict(size=12)), xaxis=dict(tickfont=dict(size=12)), font=dict(family="Courier New, monospace", size=10, color="black"))
 
     colors = ['gold', 'mediumturquoise', 'darkorange', 'lightgreen']
     trace4 = px.pie(pie_df, values=[max_cr_conf, left], names=['Bandwidth Sold', 'Left'], template='presentation', title='').update_traces(
@@ -415,7 +499,7 @@ def update_small_cards(option_slctd, option_slctd2):
         xaxis=dict(tickfont=dict(size=12)),
         font=dict(family="Courier New, monospace", size=12, color="yellow"))
 
-    trace6 = px.line(data_frame=conf_alloc_perc_df, x="Time", y=["Sold", "Requested", "Required" + "(" + str(percentil)+"%)"], template='plotly_dark', width=760, height=400).update_layout(
+    trace6 = px.line(data_frame=plot_dff, x="Time", y=["Sold", "Requested", "Required" + "(" + str(percentil)+"%)"], template='plotly_dark', width=760, height=400).update_layout(
         yaxis=dict(tickfont=dict(size=12)),
         xaxis=dict(tickfont=dict(size=10)),
         # xaxis=dict(tickfont=dict(size=8), visible=False),
