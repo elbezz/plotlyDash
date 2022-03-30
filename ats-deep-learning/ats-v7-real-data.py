@@ -13,6 +13,7 @@ import dash_bootstrap_components as dbc
 import plotly
 import plotly.express as px
 import plotly.io as pio
+import seaborn as sns
 import dash_table as dt
 from scipy.sparse.linalg import lsqr as sparse_lsqr
 from sklearn.linear_model import LinearRegression
@@ -21,15 +22,6 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing as HWES
 from sklearn.preprocessing import PolynomialFeatures
 cir_conf_df = pd.read_csv(r'E:/ats/realData/QOSGroup/cirConf/cirConf.csv')
 dataset = pd.read_csv(r'E:/ats/realData/nms_group_qos_stats/DOWN/dataset/dataset.csv')
-# nms_stat_df = pd.read_csv(r'D:\ats\random_data\nms_stat.csv')
-# datasetTable = pd.read_csv(r'D:\ats\random_data\dataset-vs.csv')
-
-# dataset = pd.merge(nms_stat_df, cir_conf_df, how='left', on="date")
-# dataset['CIR_Alloc'] = np.random.normal((np.sqrt(dataset['CIR_Conf'])*np.random.uniform(
-#     2, 3)), np.sqrt((dataset['CIR_Conf'])/(np.random.uniform(7, 10))))
-# dataset['CIR_Alloc'] = round(dataset['CIR_Alloc'], 2)
-# print(dataset)
-
 prcl_df = pd.DataFrame(columns=["Bandwidth Sold", "Bandwidth Required"])
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -114,7 +106,7 @@ app.layout = dbc.Container([
                                          {"label": "290", "value": 290},
                                          {"label": "300", "value": 300}],
                                   multi=False,
-                                  value=50),
+                                  value=150),
                      ])], style={"border-radius": "2%", "background": "primary", 'outline': 'True', 'textAlign': 'left', 'margin': '0px', 'height': '100px'}),
         ], width=4),
     ], className='mb-2 mt-2'),
@@ -122,28 +114,28 @@ app.layout = dbc.Container([
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H5('Bandwidth Sold'),
-                        html.H2(id='content-CIR-Conf', children="-")
-                    ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin': '0px', 'height': '120px', 'color': '#023047'})
+                        html.H6('Bandwidth Sold'),
+                        html.H5(id='content-CIR-Conf', children="-")
+                    ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin': '0px', 'height': '80px', 'color': '#023047'})
                 ], color="light", outline=True),
             ], width=4),
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H5('Max Bandwidth to be sold'),
-                        html.H2(id='max-bandwidth-to-be-sold', children="-")
+                        html.H6('Max Bandwidth to be sold'),
+                        html.H5(id='max-bandwidth-to-be-sold', children="-")
                     ], style={'textAlign': 'center'})
 
-                ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin-top': '0px', 'height': '120px', 'color': '#023047'}),
+                ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin-top': '0px', 'height': '80px', 'color': '#023047'}),
             ], width=4),
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H5('Remaining Bandwidth'),
-                        html.H2(id='Remaining-Bandwidth', children="-")
+                        html.H6('Remaining Bandwidth'),
+                        html.H5(id='Remaining-Bandwidth', children="-")
                     ], style={'textAlign': 'center'})
 
-                ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin-top': '0px', 'height': '120px', 'color': '#023047'}),
+                ], style={"border-radius": "3%", "background": "#8ecae6", 'textAlign': 'center', 'margin-top': '0px', 'height': '80px', 'color': '#023047'}),
             ], width=4),
             ], className='mb-2 mt-2'),
 
@@ -151,25 +143,25 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5('Remaining Time'),
-                    html.H3(id='content-RemainingTime', children="-")
-                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '120px', 'color': '#023047'})
+                    html.H6('Remaining Time'),
+                    html.H5(id='content-RemainingTime', children="-")
+                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '80px', 'color': '#023047'})
             ], color="light", outline=True),
         ], width=4),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5('Planning for new BW acquisition'),
-                    html.H3(id='planning-for-new-BW-acquisition', children="-")
-                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '120px', 'color': '#023047'})
+                    html.H6('Planning for new BW acquisition'),
+                    html.H5(id='planning-for-new-BW-acquisition', children="-")
+                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '80px', 'color': '#023047'})
             ], color="light", outline=True),
         ], width=4),
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.H5('Overbooking Ratio'),
-                    html.H3(id='content-OverbookingRatio', children="-")
-                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '120px', 'color': '#023047'})
+                    html.H6('Overbooking Ratio'),
+                    html.H5(id='content-OverbookingRatio', children="-")
+                ], style={"border-radius": "3%", "background": '#219ebc', 'inverse': 'True', 'textAlign': 'center', 'margin': '0px', 'height': '80px', 'color': '#023047'})
             ], color="light", outline=True),
         ], width=4),
     ], className='mb-2 mt-2'),
@@ -184,12 +176,16 @@ app.layout = dbc.Container([
                     id='violin-chart-cir-conf-cir-alloc-percentil', figure={}),
                 ], width=6),
     ], className='mb-2 mt-2'),
+    # dbc.Row([
+    #         dbc.Col([
+    #             dcc.Graph(id='line-sales_forecast', figure={}),
+    #         ], width=12),
+    #         ], className='mb-2 mt-2'),
     dbc.Row([
             dbc.Col([
-                dcc.Graph(id='line-sales_forecast', figure={}),
+                dcc.Graph(id='line-sales_forecastFunction', figure={}),
             ], width=12),
             ], className='mb-2 mt-2'),
-
     dbc.Row([
             dbc.Col([
                 dcc.Graph(
@@ -235,7 +231,8 @@ app.layout = dbc.Container([
     Output('pie-chart-cir-conf-prediction', 'figure'),
     Output('tblPred', 'data'),
     Output('planning-for-new-BW-acquisition', 'children'),
-    Output('line-sales_forecast', 'figure'),
+    # Output('line-sales_forecast', 'figure'),
+    Output('line-sales_forecastFunction', 'figure'),
     Output('line-chart-cir-conf-alloc-perc-date', 'figure'),
     Output('line-chart-overbooking-space', 'figure'),
 
@@ -366,6 +363,7 @@ def update_small_cards(option_slctd, option_slctd2):
         columns={"y_pred_train_poly_inv": "CIR-Configuredd"}, inplace=True)
     regression_df['CIR-Configuredd'] = round(
         regression_df['CIR-Configuredd'], 2)
+ 
 
     predictionTbl_df = regression_df[["CIR-Configuredd", "percentile"]].copy()
     predictionTbl_df.rename(
@@ -382,28 +380,26 @@ def update_small_cards(option_slctd, option_slctd2):
 # Pie chart's dataframe
     column_names = ["type", "value"]
     pie_df = pd.DataFrame(columns=column_names)
-    pie_df = pie_df.append(
-        {'type': 'max_cr_conf', 'value': max_cr_conf}, ignore_index=True)
-    pie_df = pie_df.append({'type': 'max_cr_conf_phy', 'value': int(
-        y_pred_CIR_Conf_Max[0][0])-max_cr_conf}, ignore_index=True)
+    pie_df = pie_df.append({'type': 'max_cr_conf', 'value': max_cr_conf}, ignore_index=True)
+    pie_df = pie_df.append({'type': 'max_cr_conf_phy', 'value': int(y_pred_CIR_Conf_Max[0][0])-max_cr_conf}, ignore_index=True)
     left = int(y_pred_CIR_Conf_Max[0][0])-max_cr_conf
-    
+    left = round(int(left), 2)
     print('pie_df')
     print(pie_df)
 # Prédiction du temps qui reste pour atteindre CIR_Conf Max depuis le modèle Time Série "évolution des ventes en fonction du temps"
     cir_conf_time_df = dff.copy()
     print('line error')
     print(cir_conf_time_df)
-    cir_conf_time_df['date'] = pd.to_datetime(
-        cir_conf_time_df['dateCheck'], dayfirst=True)
-    cir_conf_time_df = cir_conf_time_df.set_index('date')
+    cir_conf_time_df['dateCheck'] = pd.to_datetime(cir_conf_time_df['dateCheck'], dayfirst=True)
+    cir_conf_time_df = cir_conf_time_df.set_index('dateCheck')
     cir_conf_time_df = cir_conf_time_df.asfreq('M')
 
     print('cir_conf_time_df')
     print(cir_conf_time_df)
 
-    model_time = HWES(cir_conf_time_df, seasonal_periods=2,
-                      trend='add', seasonal='add', freq='M')
+    df_train = cir_conf_time_df.copy()
+
+    model_time = HWES(df_train, seasonal_periods=2, trend='add', seasonal='add', freq='M')
     fitted = model_time.fit(optimized=True, use_brute=True)
     sales_forecast = fitted.forecast(steps=18)
 
@@ -450,6 +446,17 @@ def update_small_cards(option_slctd, option_slctd2):
 
     equation = "y = " + str(round(c,4)) + "x²" + " + " + str(round(d,4)) + "x" + " + " + str(round(e,4))
     # equation = "y =" + str(round(a, 2)) + "x² +"+str(round(b, 2))
+# poly plot data
+    # x=np.linspace(100,5,num=200)
+    # fx=[]
+    # for i in range(len(x)):
+    #     value=c*x[i]**2 + d*x[i]+e
+    #     fx.append(value)
+    # x2=np.linspace(100,5,num=200)
+    # fx2=[]
+    # for i in range(len(x2)):
+    #     value2=x2[i]
+    #     fx2.append(value2)
 #//////////////////////////////////////////////////////////////////////////
     columns_names = ["Bandwidth Required", "Bandwidth Sold"]
     phy_maxBW_poly_df = pd.DataFrame(columns=columns_names)
@@ -481,8 +488,16 @@ def update_small_cards(option_slctd, option_slctd2):
     # print(area_plot_focast_df)
 # -----------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------
-    trace1 = px.violin(data_frame=datasetCopy, x="CIR_Conf", y="CIR_Alloc", orientation="v", box=True, color='CIR_Conf', log_x=True, log_y=True, labels={"CIR_Conf": "Configured", "CIR_Alloc": "CIR Allocated"}, width=730, height=400, template='plotly_dark', animation_frame='CIR_Conf', range_x=[10, 300], range_y=[5, 70],).update_layout(yaxis=dict(tickfont=dict(size=1)), xaxis=dict(tickfont=dict(size=1)), font=dict(family="Courier New, monospace", size=10, color="white"), legend=dict(
-        x=0, y=1, title_font_family="Times New Roman", font=dict(family="Courier", size=12, color="white"), bgcolor=None, bordercolor=None, borderwidth=0)).add_trace(px.line(dffLine, x="CIR-Configured", y="percentile").update_traces(mode='markers+lines').update_layout(title='', title_x=0.5).data[0])
+    # trace1 = px.violin(data_frame=datasetCopy, x="CIR_Conf", y="CIR_Alloc", orientation="v", box=True, color='CIR_Conf', log_x=True, log_y=True, labels={"CIR_Conf": "Configured", "CIR_Alloc": "CIR Allocated"}, width=730, height=400, template='plotly_dark', animation_frame='CIR_Conf', range_x=[10, 300], range_y=[5, 70],).update_layout(yaxis=dict(tickfont=dict(size=1)), xaxis=dict(tickfont=dict(size=1)), font=dict(family="Courier New, monospace", size=10, color="white"), legend=dict(
+    #     x=0, y=1, title_font_family="Times New Roman", font=dict(family="Courier", size=12, color="white"), bgcolor=None, bordercolor=None, borderwidth=0)).add_trace(px.line(dffLine, x="CIR-Configured", y="percentile").update_traces(mode='markers+lines').update_layout(title='', title_x=0.5).data[0])
+    trace1 = px.violin(data_frame=datasetCopy, x="CIR_Conf", y="CIR_Alloc",color='CIR_Conf', log_x=True, log_y=False, labels={"CIR_Conf": "Configured", "CIR_Alloc": "CIR Allocated"}, width=680, height=400, template='presentation',range_x=[85, 115],box=True).update_layout(violingap=1).add_trace(px.line(dffLine, x="CIR-Configured", y="percentile").update_traces(mode='markers+lines').update_layout(title='', title_x=0.5).data[0]).update_layout(
+          showlegend=False,
+        yaxis=dict(tickfont=dict(size=12)),
+        xaxis=dict(tickfont=dict(size=12)),
+        font=dict(family="Courier New, monospace", size=10, color="black"), legend=dict(
+            x=0, y=1, title_font_family="Times New Roman",
+            font=dict(family="Courier", size=12, color="blue"), bgcolor=None,
+            bordercolor=None, borderwidth=0))
 
     trace2 = px.line(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured", template='presentation', width=1490, height=600, labels={"CIR-Configured": "Bandwidth Sold", "percentile": "Bandwidth Required" + str(percentil)}).update_traces(
         mode='markers+lines').add_trace(px.area(data_frame=dffLine, x="CIR-Configured", y="percentile").data[0]).add_trace(px.scatter(dffLine, x=dffLine["CIR-Configured"], y=dffLine["percentile"], text=dffLine["diff"]).data[0]).add_trace(px.line(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured").data[0]).update_layout(yaxis=dict(tickfont=dict(size=12)), xaxis=dict(tickfont=dict(size=12)), font=dict(family="Courier New, monospace", size=10, color="black")).add_trace(px.scatter(data_frame=dffLine, x="CIR-Configured", y="CIR-Configured", text="CIR-Configured").data[0]).update_traces(textposition="top right", hovertemplate=None, hoverinfo='skip').add_trace(px.scatter(data_frame=dffLine, x="CIR-Configured", y="percentile", labels={"CIR-Configured": "Bandwidth Sold", "percentile": "Bandwidth Required"}).data[0])
@@ -494,22 +509,45 @@ def update_small_cards(option_slctd, option_slctd2):
     trace4 = px.pie(pie_df, values=[max_cr_conf, left], names=['Bandwidth Sold', 'Left'], template='presentation', title='').update_traces(
         hoverinfo='label+percent', textinfo='percent+value', textfont_size=20, marker=dict(colors=colors, line=dict(color='#000000', width=2)), pull=(0, 0.1))
 
-    trace5 = px.line(data_frame=cir_conf_time_df, x=cir_conf_time_df.index, y="CIR_Conf", template='plotly_dark', width=1490, height=500, labels={"CIR_Conf": "Bandwidth Sold"}).update_traces(mode='markers+lines').add_trace(px.area(data_frame=area_plot_focast_df, x=area_plot_focast_df.index, y="predicted").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852').add_trace(px.line(data_frame=planning_BW_acquisition_up_to_max).data[0]).add_trace(px.line(data_frame=sales_forecast_df, x=sales_forecast_df.index, y="predicted", text="predicted").data[0]).update_layout(
+    # trace5 = px.line(data_frame=df_train, x=df_train.index, y="CIR_Conf", template='plotly_dark', width=1490, height=500, labels={"CIR_Conf": "Bandwidth Sold"}).update_traces(mode='markers+lines').add_trace(px.area(data_frame=area_plot_focast_df, x=area_plot_focast_df.index, y="predicted").data[0]).update_traces(textposition="bottom right", fillcolor='#32a852').add_trace(px.line(data_frame=planning_BW_acquisition_up_to_max).data[0]).add_trace(px.line(data_frame=sales_forecast_df, x=sales_forecast_df.index, y="predicted", text="predicted").data[0]).update_layout(
+    #     yaxis=dict(tickfont=dict(size=12)),
+    #     xaxis=dict(tickfont=dict(size=12)),
+    #     font=dict(family="Courier New, monospace", size=12, color="yellow"))
+    x=np.linspace(100,5,num=200)
+    fx=[]
+    for i in range(len(x)):
+        value=c*x[i]**2 + d*x[i]+e
+        fx.append(value)
+    x2=np.linspace(100,5,num=200)
+    fx2=[]
+    for i in range(len(x2)):
+        value2=x2[i]
+        fx2.append(value2)
+    regression_df['y_pred_train_poly'] = round(regression_df['y_pred_train_poly'], 2)
+    regression_df.rename(
+        columns={"y_pred_train_poly": "Predicted_CIR"}, inplace=True)
+    trace5 = px.line( x=x, y=fx, template='presentation', width=1490, height=500, labels={'x': "Percentil"+ "(" + str(percentil)+"%)",'y':"Bandwidth Sold"}).update_xaxes(range=[70, 100]).update_yaxes(range=[70, 120]).add_trace(px.line(x=x2, y=fx2,color_discrete_sequence = ['red'], labels={'x': "Percentil"+ "(" + str(percentil)+"%)",'y':"Bandwidth Sold"}).data[0]).add_trace(px.scatter(data_frame=dffLine,x="percentile",y="CIR-Configured",color_discrete_sequence = ['green']).data[0]).add_trace(px.scatter(data_frame=regression_df,x="percentile",y="Predicted_CIR",text="Predicted_CIR",color_discrete_sequence = ['yellow']).data[0]).update_traces(textposition="bottom right", fillcolor='#32a852', textfont=dict(family="sans serif", size=18, color="blue")).update_layout(
         yaxis=dict(tickfont=dict(size=12)),
         xaxis=dict(tickfont=dict(size=12)),
-        font=dict(family="Courier New, monospace", size=12, color="yellow"))
-
-    trace6 = px.scatter(data_frame=plot_dff, x="Time", y=["Sold", "Requested", "Required" + "(" + str(percentil)+"%)"], template='plotly_dark', width=760, height=400).update_layout(
-        yaxis=dict(tickfont=dict(size=12)),
-        xaxis=dict(tickfont=dict(size=10)),
         # xaxis=dict(tickfont=dict(size=8), visible=False),
         # legend_title=None,
-        font=dict(family="Courier New, monospace", size=10, color="yellow"), legend=dict(
+        font=dict(family="Courier New, monospace", size=10, color="black"), legend=dict(
             x=0, y=1, title_font_family="Times New Roman",
-            font=dict(family="Courier", size=12, color="white"), bgcolor=None,
+            font=dict(family="Courier", size=12, color="blue"), bgcolor=None,
             bordercolor=None, borderwidth=0))
-    return str(max_cr_conf)+" mbps", RT, Overbooking_Ratio, equation, str(y_pred_CIR_Conf_Max_round)+" mbps", str(left)+" mbps", trace1, trace3, trace4, predictionTbl_df[["Bandwidth Sold", "Bandwidth Required"]].to_dict('records'), planning_BW_acquisition_value, trace5, trace6, trace2
+# y_pred_train_poly
+    trace6 = px.scatter(data_frame=plot_dff, x="Time", y=["Sold", "Requested", "Required" + "(" + str(percentil)+"%)"], template='presentation', width=760, height=400).update_layout(
+        yaxis=dict(tickfont=dict(size=12)),
+        xaxis=dict(tickfont=dict(size=12)),
+        # xaxis=dict(tickfont=dict(size=8), visible=False),
+        # legend_title=None,
+        font=dict(family="Courier New, monospace", size=10, color="black"), legend=dict(
+            x=0, y=1, title_font_family="Times New Roman",
+            font=dict(family="Courier", size=12, color="blue"), bgcolor=None,
+            bordercolor=None, borderwidth=0))
 
+    return str(max_cr_conf)+" mbps", RT, Overbooking_Ratio, equation, str(y_pred_CIR_Conf_Max_round)+" mbps", str(left)+" mbps", trace1, trace3, trace4, predictionTbl_df[["Bandwidth Sold", "Bandwidth Required"]].to_dict('records'), planning_BW_acquisition_value,trace5, trace6, trace2
+    # return str(max_cr_conf)+" mbps", RT, Overbooking_Ratio, equation, str(y_pred_CIR_Conf_Max_round)+" mbps", str(left)+" mbps", trace1, trace3, trace4, predictionTbl_df[["Bandwidth Sold", "Bandwidth Required"]].to_dict('records'), planning_BW_acquisition_value, trace5, trace6, trace2
 
 if __name__ == '__main__':
     app.run_server(debug=False, port=8000)
